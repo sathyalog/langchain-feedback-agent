@@ -112,3 +112,15 @@ The agent dynamically intercepts user inputs before sending them to OpenRouter (
 ⚬ Blocking (block): Immediately halts execution and raises a security error when PII is detected, preventing the prompt from ever being sent to the LLM.
 
 ⚬ Hashing (hash): Replaces sensitive data with a deterministic cryptographic hash (e.g., SHA-256), preserving data uniqueness across sessions without revealing original identities.
+
+#### Custom API Key Detection (`detector`)
+
+To sanitize secret keys before passing prompts to the LLM, a custom regular expression is used:
+
+```python
+PIIMiddleware("api_key", detector=r"sk-[a-zA-Z0-9]{20,}", strategy="redact", apply_to_input=True)
+⚬	Pattern breakdown (r"sk-[a-zA-Z0-9]{20,}"):
+⚬	sk-: Matches the literal API key prefix.
+⚬	[a-zA-Z0-9]: Matches any uppercase letter, lowercase letter, or numeric digit.
+⚬	`{20,}``: Requires at least 20 consecutive alphanumeric characters following the prefix.
+⚬	Result: Any string matching this format (e.g., sk-abc123xyz9876543210123) is automatically caught and replaced with [REDACTED_API_KEY].
