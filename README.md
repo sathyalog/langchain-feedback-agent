@@ -32,13 +32,12 @@ The agent utilizes Pydantic's `BaseModel` (`Feedback`) passed as `response_forma
 ### 2. Autonomous Tool Invocation
 The AI agent (`gpt-4o-mini` via OpenRouter) is equipped with the `@tool` decorator function `send_email`. Based on its system prompt, the model reads the feedback, evaluates the sentiment, generates a dynamic HTML response, and autonomously invokes `send_email()` with the generated body.
 
-### 3. Human-in-the-Loop Import
-The script imports `HumanInTheLoopMiddleware` from `langchain.agents.middleware`, indicating support for adding approval workflows before automated emails are sent out.
 
 ---
 
 ## Setup & Installation
 .env file:
+
 OPENROUTER_API_KEY=your_openrouter_api_key_here
 RESEND_API_KEY=re_123456789_your_resend_key_here
 
