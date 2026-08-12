@@ -1,6 +1,7 @@
-# AI Feedback Analyzer & Automated Email System
+# LangChain AI Feedback Agent & Guardrailed Workflow
 
-An intelligent feedback processing application built with **LangChain**, **OpenRouter**, and **Resend API**. The agent analyzes incoming training feedback, extracts structured data (sentiment, highlights, lowlights, rating, participant info), and automatically generates and sends tailored HTML emails (thank-you or apology) based on the feedback sentiment.
+An intelligent, autonomous feedback processing system built with **LangChain**, **OpenRouter**, **LangGraph**, and **Resend API**. The agent analyzes customer feedback, enforces PII privacy rules, condenses long-running context, and drafts automated response emails requiring Human-in-the-Loop (HITL) approval before dispatch.
+
 
 ---
 
