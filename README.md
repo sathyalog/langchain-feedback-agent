@@ -70,6 +70,10 @@ middleware=[HumanInTheLoopMiddleware(
 ```
 
 ## Summarization middleware
+Automatically summarize conversation history when approaching token limits, preserving recent messages while compressing older context. Summarization is useful for the following:
+1. Long-running conversations that exceed context windows.
+2. Multi-turn dialogues with extensive history.
+3. Applications where preserving full conversation context matters.
 ### 1. Context Optimization (`SummarizationMiddleware`)
 To prevent reaching context window limits and reduce token costs during long conversations, the agent leverages `SummarizationMiddleware`. This middleware automatically intercepts message payloads and compresses older conversation threads into a summary.
 
@@ -79,3 +83,20 @@ To prevent reaching context window limits and reduce token costs during long con
 
 ### 2. State Management (`InMemorySaver`)
 The agent uses LangGraph's `InMemorySaver` checkpointer to preserve conversation state and message threads locally during execution.
+
+## PII detection
+Detect and handle Personally Identifiable Information (PII) in conversations using configurable strategies. PII detection is useful for the following:
+
+    Healthcare and financial applications with compliance requirements.
+    Customer service agents that need to sanitize logs.
+    Any application handling sensitive user data.
+
+### PII Protection Strategies (`middleware=PIIMiddleware(...)`)
+
+The agent dynamically intercepts user inputs before sending them to OpenRouter (`apply_to_input=True`), applying specific obfuscation strategies:
+
+| Entity Type | Detection Mechanism | Protection Strategy (`strategy`) | Input Transformation Example |
+| :--- | :--- | :--- | :--- |
+| **Email** | Built-in email detector | **`redact`**: Fully removes or replaces the value with a placeholder tag. | `user@example.com` → `[REDACTED_EMAIL]` |
+| **Credit Card** | Built-in credit card detector | **`mask`**: Obfuscates sensitive digits while preserving trailing/leading digits. | `4111 2222 3333 4444` → `4111 **** **** 4444` |
+| **API Key** | Custom Regex pattern (`sk-[a-zA-Z0-9][20,]`) | **`redact`**: Completely sanitizes detected API keys matching standard formats. | `sk-abc123xyz9876543210123` → `[REDACTED_API_KEY]` |
