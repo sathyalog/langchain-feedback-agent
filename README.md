@@ -68,3 +68,14 @@ middleware=[HumanInTheLoopMiddleware(
         }
     )]
 ```
+
+## Summarization middleware
+### 1. Context Optimization (`SummarizationMiddleware`)
+To prevent reaching context window limits and reduce token costs during long conversations, the agent leverages `SummarizationMiddleware`. This middleware automatically intercepts message payloads and compresses older conversation threads into a summary.
+
+* **`model=llm`**: Sets the LLM instance responsible for summarizing past conversation turns.
+* **`trigger=("fraction", 0.6)`**: Dictates when summarization takes place. In this configuration, context compression triggers automatically when context length reaches **60% of the model's total context capacity**. *(Alternative configuration supported: `trigger=("tokens", 1000)`).*
+* **`keep=("messages", 10)`**: Preserves the **10 most recent messages** verbatim in working memory, ensuring active conversational continuity while older history gets summarized.
+
+### 2. State Management (`InMemorySaver`)
+The agent uses LangGraph's `InMemorySaver` checkpointer to preserve conversation state and message threads locally during execution.
