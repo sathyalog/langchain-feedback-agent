@@ -103,8 +103,12 @@ The agent dynamically intercepts user inputs before sending them to OpenRouter (
 | **API Key** | Custom Regex pattern (`sk-[a-zA-Z0-9][20,]`) | **`redact`**: Completely sanitizes detected API keys matching standard formats. | `sk-abc123xyz9876543210123` → `[REDACTED_API_KEY]` |
 
 ### PII Strategies
+
 ⚬ Redaction (redact): Completely removes or substitutes sensitive data (like emails or API keys) with generic placeholders such as [REDACTED_EMAIL].
+
 ⚬ Masking (mask): Partially obfuscates sensitive values (like credit card numbers) with asterisks, preserving structural context while concealing key details (e.g., 4111 **** **** 4444).
-Here are the Block and Hash PII protection strategies explained concisely:
+
+
 ⚬ Blocking (block): Immediately halts execution and raises a security error when PII is detected, preventing the prompt from ever being sent to the LLM.
+
 ⚬ Hashing (hash): Replaces sensitive data with a deterministic cryptographic hash (e.g., SHA-256), preserving data uniqueness across sessions without revealing original identities.
