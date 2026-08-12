@@ -39,6 +39,7 @@ The AI agent (`gpt-4o-mini` via OpenRouter) is equipped with the `@tool` decorat
 .env file:
 
 OPENROUTER_API_KEY=your_openrouter_api_key_here
+
 RESEND_API_KEY=re_123456789_your_resend_key_here
 
 how to run?
@@ -49,7 +50,21 @@ how to run?
 	1.	The script feeds the user feedback to the ChatOpenRouter model.
 	2.	The model extracts structured information matching the Feedback Pydantic schema.
 	3.	The system prompt evaluates the sentiment:
-⚬	Positive Sentiment: Drafts a thank-you HTML email.
-⚬	Negative Sentiment: Drafts an apology/action-item HTML email.
+        ⚬	Positive Sentiment: Drafts a thank-you HTML email.
+        ⚬	Negative Sentiment: Drafts an apology/action-item HTML email.
 	4.	The agent automatically executes the send_email tool to deliver the email via Resend API.
 
+So far what we build is autonomous agent with capabilities of sending emails based on sentiment.
+
+Now we will introduce Human-In-The-Loop(HITL) where human will take the decision to approve or reject the sending email with positive/negative feedback.
+
+for this we need HumanInTheLoopMiddleware to be added in create_agent and syntax would be like
+```
+middleware=[HumanInTheLoopMiddleware(
+        interrupt_on = {
+            "send_email": {
+                "allowed_decisions": ["approve", "reject"],
+            }
+        }
+    )]
+```

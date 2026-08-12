@@ -1,5 +1,8 @@
 from langchain_openrouter import ChatOpenRouter
 from langchain.agents import create_agent
+from langchain.agents.middleware import HumanInTheLoopMiddleware
+from langgraph.types import Command
+from langgraph.checkpoint.memory import InMemorySaver
 from langchain.tools import tool
 from dotenv import load_dotenv
 from pydantic import Field, BaseModel
@@ -21,6 +24,7 @@ class Feedback(BaseModel):
     lowlights: list[str]=Field(description="List of negative highlights of the program described by the participant")
     rating: int = Field(description="Rating of the program")
     email_address: str = Field("Email address of the participant")
+    status:str = Field(description="Status of the send email operation")
 
 @tool
 def send_email(email_address: str, body: str):
@@ -40,9 +44,17 @@ def send_email(email_address: str, body: str):
 
 agent = create_agent(
     model=llm,
-    system_prompt="You are an AI assistant who analyze the customer feedback and send an email to customer based on feedback sentiment. If sentiment is positive, you send a thank you email and if sentiment is negative you send an apology email. You use tool to send email. Use html format to draft an email.",
+    system_prompt="You are an AI assistant who analyze the customer feedback and send an email to customer based on feedback sentiment. If sentiment is positive, you send a thank you email and if sentiment is negative you send an apology email. You use tool to send email. Use html format to draft an email. Reply with task status whether the email is sent or not based on human approval",
     response_format=Feedback,
     tools=[send_email],
+    checkpointer=InMemorySaver(),
+    middleware=[HumanInTheLoopMiddleware(
+        interrupt_on = {
+            "send_email": {
+                "allowed_decisions": ["approve", "reject"],
+            }
+        }
+    )]
 )
 #positive feedback content - The Java Fullstack training program completely exceeded my expectations. It comprehensively covered key technologies like Core Java, Spring Boot, Hibernate, and Angular with excellent pacing. The structure allowed for plenty of hands-on practice, particularly during the Spring Boot and Angular modules, which really solidified my understanding. Furthermore, the dedicated sessions on debugging and code optimization were incredibly valuable and greatly enhanced the program’s real-world effectiveness. The trainer was highly knowledgeable, and their well-planned delivery ensured meaningful learning and immediate practical application. Overall, the program offered a perfect balance of theory and practical focus. I would confidently rate it 5 out of 5.
 # Feedback given by Sathya.Email address - sathya.javascript@gmail.com
@@ -54,5 +66,25 @@ result = agent.invoke(
             "content": "The Java Fullstack training program did not meet expectations. Although it covered key technologies like Core Java, Spring Boot, Hibernate, and Angular, several sections were rushed—especially Spring Boot and Angular—leaving little time for hands-on practice. The lack of dedicated sessions on debugging and code optimization further reduced the program’s effectiveness. While the trainer was knowledgeable, the pace and structure limited meaningful learning and real-world application. Overall, the program requires better pacing and more practical focus. I would rate it 2 out of 5. Feedback given by Sathya. Email address - sathya.javascript@gmail.com"
             }
         ]
-    }
+    }, config={"configurable": {"thread_id": 1}}
 )
+
+if "__interrupt__" in result:
+    print("Workflow paused..waiting for human approval to send email")
+    print("1. Approve \n 2. Reject")
+    user_input = input("Enter your choice: ")
+    choices = {"1": "approve", "2": "reject"}
+    result = agent.invoke(
+        Command(
+            resume={
+                "decisions": [
+                    {
+                        "type": choices.get(user_input)
+                    }
+                ]
+            }
+        ),config={"configurable": {"thread_id": 1}}
+    )
+
+   
+print(f"Result : {result['messages'][-1].content}")
